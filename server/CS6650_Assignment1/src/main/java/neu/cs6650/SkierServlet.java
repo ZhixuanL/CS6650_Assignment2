@@ -7,8 +7,37 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.BufferedReader;
 import org.json.JSONObject;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.ConnectionFactory;
 
 public class SkierServlet extends HttpServlet {
+  private static final String QUEUE_NAME = "ski_queue"; // RabbitMQ 队列名
+  private static final String RABBITMQ_HOST = "54.189.170.123"; // 这里填RabbitMQ公网IP
+  private Connection connection;
+  private Channel channel;
+
+  @Override
+  public void init() throws ServletException {
+    try {
+      // 创建 RabbitMQ 连接工厂
+      ConnectionFactory factory = new ConnectionFactory();
+      factory.setHost(RABBITMQ_HOST);
+      factory.setPort(5672);
+      factory.setUsername("myuser"); // RabbitMQ user name
+      factory.setPassword("mypassword"); // RabbitMQ password
+
+      // 建立连接和通道
+      connection = factory.newConnection();
+      channel = connection.createChannel();
+
+      // 声明一个队列（如果它不存在就创建）
+      channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+    } catch (Exception e) {
+      throw new ServletException("Failed to connect to RabbitMQ", e);
+    }
+  }
+
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse res)
       throws ServletException, IOException {
@@ -49,12 +78,31 @@ public class SkierServlet extends HttpServlet {
         return;
       }
 
+      // 发送 JSON 数据到 RabbitMQ
+      channel.basicPublish("", QUEUE_NAME, null, json.toString().getBytes());
+      System.out.println("Sent to RabbitMQ: " + json.toString());
+
+      // even Servlet sends data to RabbitMQ, it still has to tell Client "We've got your request"
+      // Client doesn't care when Servet deals with data; it only cares whether Servlet has received their request
+      // as long as Rabbit receives Servlet's message, doPost() replies HTTP 201
       res.setStatus(HttpServletResponse.SC_CREATED);
       res.getWriter().write("{\"message\": \"Lift ride recorded successfully\"}");
 
     } catch (Exception e) {
       res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       res.getWriter().write("{\"message\": \"Invalid JSON format\"}");
+    }
+  }
+
+  // will be automatically called by the servlet when Tomcat is shut down,
+  // or EC2 is restarted
+  @Override
+  public void destroy() {
+    try {
+      if (channel != null) channel.close();
+      if (connection != null) connection.close();
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 
