@@ -1,29 +1,44 @@
-import java.util.Random;
+import org.json.JSONObject;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Generates random lift ride data for skiers.
+ * Uses a thread pool to speed up data generation.
+ * The generated data is stored in a BlockingQueue for later processing.
+ */
 public class LiftRideDataGenerator {
-  private static final Random random = new Random();
+  private static final int THREAD_COUNT = 4; // number of threads used for data generation
+  private static final ExecutorService executor = Executors.newFixedThreadPool(THREAD_COUNT);
+  private static final AtomicInteger printCounter = new AtomicInteger(0); // Track printed messages
+  /**
+   * Generates random skier lift ride data and adds it to the provided queue.
+   */
+  public static void generateData(BlockingQueue<String> queue, int totalRequests) {
+    int requestsPerThread = totalRequests / THREAD_COUNT;  // distributes tasks among threads
 
-  // Randomly generate data
-  public static String generateRandomLiftRide() {
-    int skierID = random.nextInt(100000) + 1;  // 1 ~ 100000
-    int resortID = random.nextInt(10) + 1;     // 1 ~ 10
-    int liftID = random.nextInt(40) + 1;       // 1 ~ 40
-    int time = random.nextInt(360) + 1;        // 1 ~ 360
+    for (int i = 0; i < THREAD_COUNT; i++) {
+      executor.execute(() -> {
+        try {
+          for (int j = 0; j < requestsPerThread; j++) {
+            JSONObject json = new JSONObject();
+            json.put("skierID", (int) (Math.random() * 100000) + 1);
+            json.put("liftID", (int) (Math.random() * 40) + 1);
+            json.put("resortID", 1);
+            json.put("seasonID", ClientConfig.SEASON_ID);
+            json.put("dayID", 1);
+            json.put("time", (int) (Math.random() * 360) + 1);
 
-    return "{"
-        + "\"skierID\": " + skierID + ","
-        + "\"resortID\": " + resortID + ","
-        + "\"liftID\": " + liftID + ","
-        + "\"seasonID\": \"2025\","
-        + "\"dayID\": \"1\","
-        + "\"time\": " + time
-        + "}";
-  }
-
-  public static void main(String[] args) {
-    // Generate 5 random data for the test
-    for (int i = 0; i < 5; i++) {
-      System.out.println(generateRandomLiftRide());
+            queue.put(json.toString()); // adds data to BlockingQueue
+          }
+          // System.out.println(Thread.currentThread().getName() + " Data generation completed: " + requestsPerThread);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          e.printStackTrace();
+        }
+      });
     }
+
+    executor.shutdown(); // Shut down the thread pool after all tasks are submitted
   }
 }

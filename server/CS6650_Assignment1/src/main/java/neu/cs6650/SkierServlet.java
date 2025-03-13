@@ -13,7 +13,7 @@ import com.rabbitmq.client.ConnectionFactory;
 
 public class SkierServlet extends HttpServlet {
   private static final String QUEUE_NAME = "ski_queue"; // RabbitMQ 队列名
-  private static final String RABBITMQ_HOST = "54.189.170.123"; // 这里填RabbitMQ公网IP
+  private static final String RABBITMQ_HOST = "52.40.23.135"; // 这里填RabbitMQ公网IP
   private Connection connection;
   private Channel channel;
 
