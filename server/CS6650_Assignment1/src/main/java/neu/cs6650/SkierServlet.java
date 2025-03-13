@@ -11,27 +11,32 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 
+
+/**
+ * Remember to change the IP address every time when connect to EC2!!!
+ * Rebuild project and artifacts
+ */
 public class SkierServlet extends HttpServlet {
-  private static final String QUEUE_NAME = "ski_queue"; // RabbitMQ 队列名
-  private static final String RABBITMQ_HOST = "52.40.23.135"; // 这里填RabbitMQ公网IP
+  private static final String QUEUE_NAME = "ski_queue"; // queue name
+  private static final String RABBITMQ_HOST = "52.40.23.135"; // public IP address of ec2
   private Connection connection;
   private Channel channel;
 
   @Override
   public void init() throws ServletException {
     try {
-      // 创建 RabbitMQ 连接工厂
+      // Create factory to connect to RabbitMQ
       ConnectionFactory factory = new ConnectionFactory();
       factory.setHost(RABBITMQ_HOST);
       factory.setPort(5672);
       factory.setUsername("myuser"); // RabbitMQ user name
       factory.setPassword("mypassword"); // RabbitMQ password
 
-      // 建立连接和通道
+      // Create connection and channel
       connection = factory.newConnection();
       channel = connection.createChannel();
 
-      // 声明一个队列（如果它不存在就创建）
+      // Declare a queue, and create one if it doesn't exist
       channel.queueDeclare(QUEUE_NAME, true, false, false, null);
     } catch (Exception e) {
       throw new ServletException("Failed to connect to RabbitMQ", e);
@@ -78,7 +83,7 @@ public class SkierServlet extends HttpServlet {
         return;
       }
 
-      // 发送 JSON 数据到 RabbitMQ
+      // Send JSON data to RabbitMQ
       channel.basicPublish("", QUEUE_NAME, null, json.toString().getBytes());
       System.out.println("Sent to RabbitMQ: " + json.toString());
 
