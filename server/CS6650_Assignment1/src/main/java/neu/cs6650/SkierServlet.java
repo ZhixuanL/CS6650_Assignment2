@@ -18,7 +18,7 @@ import com.rabbitmq.client.ConnectionFactory;
  */
 public class SkierServlet extends HttpServlet {
   private static final String QUEUE_NAME = "ski_queue"; // queue name
-  private static final String RABBITMQ_HOST = "54.200.205.189"; // public IP address of ec2
+  private static final String RABBITMQ_HOST = "34.214.120.223"; // public IP address of ec2
   private Connection connection;
   private Channel channel;
 

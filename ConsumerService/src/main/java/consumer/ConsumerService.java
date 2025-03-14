@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
  * ConsumerService: Listens to RabbitMQ, retrieves messages, and processes them using MessageProcessor.
  */
 public class ConsumerService {
-  private static final int NUM_THREADS = 10; // Number of consumer threads (adjust based on needs)
+  private static final int NUM_THREADS = 5; // Number of consumer threads (adjust based on needs)
 
   public static void main(String[] args) {
     ExecutorService executor = Executors.newFixedThreadPool(NUM_THREADS);
@@ -34,11 +34,16 @@ public class ConsumerService {
             DeliverCallback deliverCallback = (consumerTag, delivery) -> {
               String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
               System.out.println("Received message: " + message);
-              MessageProcessor.processMessage(message); // Process message
+
+              try {
+                MessageProcessor.processMessage(message); // Process message
+                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
+              } catch (Exception e) {
+                e.printStackTrace();
+              }
             };
 
-            // Consumer will keep running indefinitely, waiting for messages
-            channel.basicConsume(ConsumerConfig.QUEUE_NAME, true, deliverCallback, consumerTag -> {});
+            channel.basicConsume(ConsumerConfig.QUEUE_NAME, false, deliverCallback, consumerTag -> {});
 
           } catch (IOException e) {
             e.printStackTrace();
@@ -46,10 +51,6 @@ public class ConsumerService {
         });
       }
 
-      // executor.shutdown();
-      // executor.awaitTermination(10, TimeUnit.MINUTES);
-      // System.out.println("All consumer threads exited.");
-      // System.exit(0);  // 不能让它自动退出
     } catch (IOException | TimeoutException e) {
       e.printStackTrace();
     }
