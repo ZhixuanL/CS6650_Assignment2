@@ -32,7 +32,7 @@ public class RequestSender implements Runnable {
   public void run() {
     boolean writeHeader = false;
 
-    // **检查文件是否已存在，如果文件为空则写入表头**
+    // check if the file exits; write the titles if empty
     try {
       writeHeader = new java.io.File(ClientConfig.CSV_FILE_PATH).length() == 0;
     } catch (Exception ignored) {}
@@ -40,7 +40,6 @@ public class RequestSender implements Runnable {
     try (FileWriter fw = new FileWriter(ClientConfig.CSV_FILE_PATH, true);
         PrintWriter writer = new PrintWriter(fw)) {
 
-      // **如果文件为空，先写入表头**
       if (writeHeader) {
         writer.println("Start Time,Request Type,Latency(ms),Response Code");
         writer.flush();
@@ -58,9 +57,8 @@ public class RequestSender implements Runnable {
           long latency = endTime - startTime;
           latencyList.add(latency);
 
-          // **确保数据严格按照 CSV 四列写入**
           writer.printf("%d,POST,%d,%d%n", startTime, latency, statusCode);
-          writer.flush(); // 立即写入磁盘，防止数据丢失
+          writer.flush();
         } catch (Exception e) {
           e.printStackTrace();
         }

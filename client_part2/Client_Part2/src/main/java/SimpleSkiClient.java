@@ -9,16 +9,16 @@ public class SimpleSkiClient {
   private static final BlockingQueue<String> requestQueue = new LinkedBlockingQueue<>();
   private static final AtomicInteger successCount = new AtomicInteger(0);
   private static final AtomicInteger failureCount = new AtomicInteger(0);
-  private static final List<Long> latencyList = Collections.synchronizedList(new ArrayList<>()); // 存储所有的延迟数据
+  private static final List<Long> latencyList = Collections.synchronizedList(new ArrayList<>()); // store latency data
 
   public static void main(String[] args) {
     System.out.println("Starting Client...");
     System.out.println("Threads used: " + ClientConfig.NUM_THREADS);
 
-    // 生成数据
+    // generate data
     LiftRideDataGenerator.generateData(requestQueue, ClientConfig.TOTAL_REQUESTS);
 
-    // 创建线程池
+    // create thread pool
     ExecutorService executor = Executors.newFixedThreadPool(ClientConfig.NUM_THREADS);
     HttpClient client = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(60))
@@ -26,7 +26,7 @@ public class SimpleSkiClient {
 
     long startTime = System.currentTimeMillis();
 
-    // 启动多个线程
+    // start multiple threads
     for (int i = 0; i < ClientConfig.NUM_THREADS; i++) {
       executor.execute(new RequestSender(client, requestQueue, successCount, failureCount, latencyList));
     }
@@ -43,12 +43,12 @@ public class SimpleSkiClient {
 
     System.out.println("Queue Remaining Size: " + requestQueue.size());
 
-    // 打印统计信息
+    // print data
     printStatistics(latencyList, successCount.get(), failureCount.get(), totalTimeSeconds);
   }
 
   /**
-   * 计算统计数据并打印
+   * Calculates and prints data
    */
   private static void printStatistics(List<Long> latencies, int success, int failure, double totalTime) {
     if (latencies.isEmpty()) {
