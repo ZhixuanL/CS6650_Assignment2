@@ -24,7 +24,7 @@ public class LiftRideDataGenerator {
             JSONObject json = new JSONObject();
             json.put("skierID", (int) (Math.random() * 100000) + 1);
             json.put("liftID", (int) (Math.random() * 40) + 1);
-            json.put("resortID", 1);
+            json.put("resortID", (int) (Math.random() * 10) + 1);
             json.put("seasonID", ClientConfig.SEASON_ID);
             json.put("dayID", 1);
             json.put("time", (int) (Math.random() * 360) + 1);
